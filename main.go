@@ -27,7 +27,7 @@ Loop:
   for {
     select {
     case msg := <-rtm.IncomingEvents:
-      fmt.Print("Event Received: ")
+      fmt.Println("Event Received:")
       switch ev := msg.Data.(type) {
 
       case *slack.MessageEvent:
@@ -37,10 +37,19 @@ Loop:
         text = strings.TrimSpace(text)
         text = strings.ToLower(text)
 
-        matched, _ := regexp.MatchString("dark souls", text)
+        prefix := ",u,"
+        matchedUser, _ := regexp.MatchString("^" + prefix ,text)
 
-        if ev.User != info.User.ID && matched {
-          rtm.SendMessage(rtm.NewOutgoingMessage("\\[T]/ Praise the Sun \\[T]/", ev.Channel))
+        if ev.User != info.User.ID && matchedUser {
+          text = text[len(prefix):]
+          text = strings.TrimSpace(text)
+          splits := strings.Split(text, ":")
+          if len(splits) != 2 {
+            panic("Not a valid user command")
+          }
+          user, state := splits[0], splits[1]
+          fmt.Printf("%s ::: %s",user, state)
+          rtm.SendMessage(rtm.NewOutgoingMessage("\\[T]/ Praise *the* Sun \\[T]/", ev.Channel))
         }
 
       case *slack.RTMError:
